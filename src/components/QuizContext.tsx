@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { allQuestions, type Question, type QuestionType, type Subject } from '@/data';
 
 interface AnswerRecord {
@@ -8,6 +8,16 @@ interface AnswerRecord {
   userAnswer: string;
   isCorrect: boolean;
   timestamp: number;
+}
+
+type ExamMode = 'practice' | 'exam';
+
+interface ExamState {
+  examMode: ExamMode;
+  examStartTime: number | null;
+  examRemainingSeconds: number;
+  examFinished: boolean;
+  examPaused: boolean;
 }
 
 interface QuizState {
@@ -22,6 +32,12 @@ interface QuizState {
   wrongIds: number[];
   // Current question index in filtered list
   currentIndex: number;
+  // Exam mode
+  examMode: ExamMode;
+  examStartTime: number | null;
+  examRemainingSeconds: number;
+  examFinished: boolean;
+  examPaused: boolean;
 }
 
 interface QuizContextType extends QuizState {
@@ -40,11 +56,19 @@ interface QuizContextType extends QuizState {
   correctCount: number;
   choiceCorrectCount: number;
   choiceAnsweredCount: number;
+  // Exam mode methods
+  startExam: () => void;
+  setExamMode: (mode: ExamMode) => void;
+  togglePauseExam: () => void;
+  endExam: () => void;
+  exitExamMode: () => void;
+  elapsedSeconds: number;
 }
 
 const QuizContext = createContext<QuizContextType | null>(null);
 
 const STORAGE_KEY = 'henan-quiz-state';
+const EXAM_DURATION_SECONDS = 120 * 60; // 2 hours
 
 function loadState(): Partial<QuizState> {
   if (typeof window === 'undefined') return {};
@@ -65,6 +89,11 @@ function saveState(state: QuizState) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: state.answers,
       wrongIds: state.wrongIds,
+      examMode: state.examMode,
+      examStartTime: state.examStartTime,
+      examRemainingSeconds: state.examRemainingSeconds,
+      examFinished: state.examFinished,
+      examPaused: state.examPaused,
     }));
   } catch {
     // ignore
@@ -81,6 +110,16 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const [wrongIds, setWrongIds] = useState<number[]>(saved.wrongIds || []);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Exam mode state
+  const [examMode, setExamModeState] = useState<ExamMode>(saved.examMode || 'practice');
+  const [examStartTime, setExamStartTime] = useState<number | null>(saved.examStartTime || null);
+  const [examRemainingSeconds, setExamRemainingSeconds] = useState<number>(
+    saved.examRemainingSeconds ?? EXAM_DURATION_SECONDS
+  );
+  const [examFinished, setExamFinished] = useState<boolean>(saved.examFinished || false);
+  const [examPaused, setExamPaused] = useState<boolean>(saved.examPaused || false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Filtered questions
   const filteredQuestions = allQuestions.filter((q) => {
     if (subjectFilter !== 'all' && q.subject !== subjectFilter) return false;
@@ -88,10 +127,46 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     return true;
   });
 
-  // Save to localStorage when answers or wrongIds change
+  // Save to localStorage when key state changes
   useEffect(() => {
-    saveState({ subjectFilter, typeFilter, view, answers, wrongIds, currentIndex } as QuizState);
-  }, [answers, wrongIds, subjectFilter, typeFilter, view, currentIndex]);
+    saveState({
+      subjectFilter, typeFilter, view, answers, wrongIds, currentIndex,
+      examMode, examStartTime, examRemainingSeconds, examFinished, examPaused,
+    } as QuizState);
+  }, [answers, wrongIds, subjectFilter, typeFilter, view, currentIndex, examMode, examStartTime, examRemainingSeconds, examFinished, examPaused]);
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (examMode !== 'exam' || examFinished || examPaused || !examStartTime) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setExamRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          // Time's up
+          setExamFinished(true);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [examMode, examFinished, examPaused, examStartTime]);
 
   const submitAnswer = useCallback((questionId: number, userAnswer: string, isCorrect: boolean) => {
     const record: AnswerRecord = {
@@ -131,6 +206,11 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     setAnswers({});
     setWrongIds([]);
     setCurrentIndex(0);
+    setExamModeState('practice');
+    setExamStartTime(null);
+    setExamRemainingSeconds(EXAM_DURATION_SECONDS);
+    setExamFinished(false);
+    setExamPaused(false);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -139,6 +219,51 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const removeWrongQuestion = useCallback((id: number) => {
     setWrongIds((prev) => prev.filter((qid) => qid !== id));
   }, []);
+
+  // Exam mode methods
+  const startExam = useCallback(() => {
+    setExamModeState('exam');
+    setExamStartTime(Date.now());
+    setExamRemainingSeconds(EXAM_DURATION_SECONDS);
+    setExamFinished(false);
+    setExamPaused(false);
+    setAnswers({});
+    setWrongIds([]);
+    setCurrentIndex(0);
+  }, []);
+
+  const setExamMode = useCallback((mode: ExamMode) => {
+    setExamModeState(mode);
+    if (mode === 'practice') {
+      setExamStartTime(null);
+      setExamRemainingSeconds(EXAM_DURATION_SECONDS);
+      setExamFinished(false);
+      setExamPaused(false);
+    }
+  }, []);
+
+  const togglePauseExam = useCallback(() => {
+    setExamPaused((prev) => !prev);
+  }, []);
+
+  const endExam = useCallback(() => {
+    setExamFinished(true);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const exitExamMode = useCallback(() => {
+    setExamModeState('practice');
+    setExamStartTime(null);
+    setExamRemainingSeconds(EXAM_DURATION_SECONDS);
+    setExamFinished(false);
+    setExamPaused(false);
+  }, []);
+
+  // Calculate elapsed seconds (pure calculation, no Date.now)
+  const elapsedSeconds = EXAM_DURATION_SECONDS - examRemainingSeconds;
 
   // Stats
   const answeredCount = Object.keys(answers).length;
@@ -162,6 +287,11 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     answers,
     wrongIds,
     currentIndex,
+    examMode,
+    examStartTime,
+    examRemainingSeconds,
+    examFinished,
+    examPaused,
     filteredQuestions,
     setSubjectFilter,
     setTypeFilter,
@@ -177,6 +307,12 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     correctCount,
     choiceCorrectCount,
     choiceAnsweredCount,
+    startExam,
+    setExamMode,
+    togglePauseExam,
+    endExam,
+    exitExamMode,
+    elapsedSeconds,
   };
 
   return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;
