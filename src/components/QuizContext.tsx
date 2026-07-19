@@ -38,6 +38,8 @@ interface QuizState {
   examRemainingSeconds: number;
   examFinished: boolean;
   examPaused: boolean;
+  // Auto advance
+  autoAdvance: boolean;
 }
 
 interface QuizContextType extends QuizState {
@@ -63,6 +65,8 @@ interface QuizContextType extends QuizState {
   endExam: () => void;
   exitExamMode: () => void;
   elapsedSeconds: number;
+  // Auto advance
+  setAutoAdvance: (enabled: boolean) => void;
 }
 
 const QuizContext = createContext<QuizContextType | null>(null);
@@ -94,6 +98,7 @@ function saveState(state: QuizState) {
       examRemainingSeconds: state.examRemainingSeconds,
       examFinished: state.examFinished,
       examPaused: state.examPaused,
+      autoAdvance: state.autoAdvance,
     }));
   } catch {
     // ignore
@@ -120,6 +125,12 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const [examPaused, setExamPaused] = useState<boolean>(saved.examPaused || false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Auto advance state
+  const [autoAdvance, setAutoAdvanceState] = useState<boolean>(saved.autoAdvance ?? true);
+  const setAutoAdvance = useCallback((enabled: boolean) => {
+    setAutoAdvanceState(enabled);
+  }, []);
+
   // Filtered questions
   const filteredQuestions = allQuestions.filter((q) => {
     if (subjectFilter !== 'all' && q.subject !== subjectFilter) return false;
@@ -132,8 +143,9 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     saveState({
       subjectFilter, typeFilter, view, answers, wrongIds, currentIndex,
       examMode, examStartTime, examRemainingSeconds, examFinished, examPaused,
+      autoAdvance,
     } as QuizState);
-  }, [answers, wrongIds, subjectFilter, typeFilter, view, currentIndex, examMode, examStartTime, examRemainingSeconds, examFinished, examPaused]);
+  }, [answers, wrongIds, subjectFilter, typeFilter, view, currentIndex, examMode, examStartTime, examRemainingSeconds, examFinished, examPaused, autoAdvance]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -292,6 +304,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     examRemainingSeconds,
     examFinished,
     examPaused,
+    autoAdvance,
     filteredQuestions,
     setSubjectFilter,
     setTypeFilter,
@@ -313,6 +326,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     endExam,
     exitExamMode,
     elapsedSeconds,
+    setAutoAdvance,
   };
 
   return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;

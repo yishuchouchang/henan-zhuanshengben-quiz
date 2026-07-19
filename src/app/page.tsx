@@ -113,7 +113,7 @@ function FilterBar() {
 
 /* ======================== Choice Question ======================== */
 function ChoiceQuestion({ question, answered }: { question: Question; answered: boolean }) {
-  const { submitAnswer, answers, examMode, goToNext, filteredQuestions, currentIndex } = useQuiz();
+  const { submitAnswer, answers, examMode, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [selected, setSelected] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -130,9 +130,9 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
     };
   }, [autoAdvanceTimer]);
 
-  // Auto-advance in exam mode after answering
+  // Auto-advance after answering (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (isAnswered && examMode === 'exam' && !autoAdvanceTimer) {
+    if (isAnswered && autoAdvance && !autoAdvanceTimer) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
         const timer = setTimeout(() => {
@@ -141,7 +141,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
         setAutoAdvanceTimer(timer);
       }
     }
-  }, [isAnswered, examMode, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
+  }, [isAnswered, autoAdvance, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
 
   const handleSelect = (value: string) => {
     if (isAnswered) return;
@@ -242,7 +242,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
 /* ======================== Text Question (Fill / Short Answer / Case / Essay) ======================== */
 function TextQuestion({ question }: { question: Question }) {
-  const { submitAnswer, answers, examMode, goToNext, filteredQuestions, currentIndex } = useQuiz();
+  const { submitAnswer, answers, examMode, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [userInput, setUserInput] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [selfEval, setSelfEval] = useState<'correct' | 'wrong' | null>(null);
@@ -258,9 +258,9 @@ function TextQuestion({ question }: { question: Question }) {
     };
   }, [autoAdvanceTimer]);
 
-  // Auto-advance in exam mode after self-evaluation
+  // Auto-advance after self-evaluation (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (selfEval && examMode === 'exam' && !autoAdvanceTimer) {
+    if (selfEval && autoAdvance && !autoAdvanceTimer) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
         const timer = setTimeout(() => {
@@ -269,7 +269,7 @@ function TextQuestion({ question }: { question: Question }) {
         setAutoAdvanceTimer(timer);
       }
     }
-  }, [selfEval, examMode, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
+  }, [selfEval, autoAdvance, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
 
   const handleSubmit = () => {
     if (!userInput.trim() || isAnswered) return;
@@ -1236,7 +1236,7 @@ function PausedOverlay() {
 
 /* ======================== App Shell ======================== */
 function AppShell() {
-  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused } = useQuiz();
+  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance } = useQuiz();
   const [showModeDialog, setShowModeDialog] = useState(false);
 
   // If exam is finished, show results
@@ -1260,6 +1260,25 @@ function AppShell() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Auto-advance toggle */}
+              <button
+                onClick={() => setAutoAdvance(!autoAdvance)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  autoAdvance
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                }`}
+                title={autoAdvance ? '点击关闭自动跳题' : '点击开启自动跳题'}
+              >
+                <span className={`w-6 h-3.5 rounded-full relative transition-colors ${
+                  autoAdvance ? 'bg-blue-500' : 'bg-gray-300'
+                }`}>
+                  <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white shadow transition-transform ${
+                    autoAdvance ? 'left-3' : 'left-0.5'
+                  }`} />
+                </span>
+                <span className="hidden sm:inline">{autoAdvance ? '自动跳题' : '手动'}</span>
+              </button>
               <Button
                 variant="outline"
                 size="sm"
