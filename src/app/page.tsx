@@ -113,14 +113,35 @@ function FilterBar() {
 
 /* ======================== Choice Question ======================== */
 function ChoiceQuestion({ question, answered }: { question: Question; answered: boolean }) {
-  const { submitAnswer, answers } = useQuiz();
+  const { submitAnswer, answers, examMode, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [selected, setSelected] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const record = answers[question.id];
   const isAnswered = record !== undefined;
   const userAnswer = record?.userAnswer || selected;
   const isCorrect = record?.isCorrect;
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+    };
+  }, [autoAdvanceTimer]);
+
+  // Auto-advance in exam mode after answering
+  useEffect(() => {
+    if (isAnswered && examMode === 'exam' && !autoAdvanceTimer) {
+      const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
+      if (!isLastQuestion) {
+        const timer = setTimeout(() => {
+          goToNext();
+        }, 500);
+        setAutoAdvanceTimer(timer);
+      }
+    }
+  }, [isAnswered, examMode, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
 
   const handleSelect = (value: string) => {
     if (isAnswered) return;
@@ -221,13 +242,34 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
 /* ======================== Text Question (Fill / Short Answer / Case / Essay) ======================== */
 function TextQuestion({ question }: { question: Question }) {
-  const { submitAnswer, answers } = useQuiz();
+  const { submitAnswer, answers, examMode, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [userInput, setUserInput] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [selfEval, setSelfEval] = useState<'correct' | 'wrong' | null>(null);
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const record = answers[question.id];
   const isAnswered = record !== undefined;
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+    };
+  }, [autoAdvanceTimer]);
+
+  // Auto-advance in exam mode after self-evaluation
+  useEffect(() => {
+    if (selfEval && examMode === 'exam' && !autoAdvanceTimer) {
+      const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
+      if (!isLastQuestion) {
+        const timer = setTimeout(() => {
+          goToNext();
+        }, 500);
+        setAutoAdvanceTimer(timer);
+      }
+    }
+  }, [selfEval, examMode, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
 
   const handleSubmit = () => {
     if (!userInput.trim() || isAnswered) return;
@@ -334,7 +376,7 @@ function TextQuestion({ question }: { question: Question }) {
 
 /* ======================== Question Card ======================== */
 function QuestionCard() {
-  const { getCurrentQuestion, filteredQuestions, currentIndex, answers } = useQuiz();
+  const { getCurrentQuestion, filteredQuestions, currentIndex, answers, examMode, endExam } = useQuiz();
   const question = getCurrentQuestion();
 
   if (!question) {
@@ -352,6 +394,10 @@ function QuestionCard() {
   const isAnswered = answers[question.id] !== undefined;
   const typeLabel = QUESTION_TYPE_LABELS[question.type];
   const subjectLabel = SUBJECT_LABELS[question.subject];
+  const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
+
+  // Check if all questions in current filter are answered
+  const allAnswered = filteredQuestions.every((q) => answers[q.id] !== undefined);
 
   return (
     <Card className="border-blue-100 shadow-sm">
@@ -384,6 +430,40 @@ function QuestionCard() {
         ) : (
           <TextQuestion question={question} />
         )}
+
+        {/* All questions answered indicator in exam mode */}
+        {examMode === 'exam' && allAnswered && isLastQuestion && (
+          <div className="mt-4 p-4 rounded-lg border border-green-200 bg-green-50">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <span className="font-medium text-green-700">所有题目已完成!</span>
+            </div>
+            <p className="text-sm text-green-600 mb-3">
+              你已完成当前筛选条件下的所有题目，可以提交试卷查看成绩。
+            </p>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.confirm('确定要提交试卷吗？')) {
+                  endExam();
+                }
+              }}
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              提交试卷
+            </Button>
+          </div>
+        )}
+
+        {/* Last question indicator in exam mode (not all answered yet) */}
+        {examMode === 'exam' && isLastQuestion && !allAnswered && (
+          <div className="mt-4 p-3 rounded-lg border border-amber-200 bg-amber-50">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <span className="text-sm text-amber-700">这是最后一题，请检查是否有未答的题目</span>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -393,31 +473,63 @@ function QuestionCard() {
 function QuestionNavigator() {
   const { filteredQuestions, currentIndex, goToQuestion, goToPrev, goToNext, answers } = useQuiz();
 
+  // Calculate stats for the legend
+  const answeredCorrect = filteredQuestions.filter((q) => answers[q.id]?.isCorrect === true).length;
+  const answeredWrong = filteredQuestions.filter((q) => answers[q.id]?.isCorrect === false).length;
+  const unanswered = filteredQuestions.length - answeredCorrect - answeredWrong;
+
   return (
     <Card className="border-blue-100 shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-gray-700">题目导航</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium text-gray-700">题目导航</CardTitle>
+          <div className="flex items-center gap-3 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-sm bg-gray-100 border border-gray-300 inline-block" />
+              未答 {unanswered}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-sm bg-green-100 border border-green-300 inline-block" />
+              答对 {answeredCorrect}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-sm bg-red-100 border border-red-300 inline-block" />
+              答错 {answeredWrong}
+            </span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-1.5 mb-4">
           {filteredQuestions.map((q, idx) => {
             const record = answers[q.id];
-            let bgClass = 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+            const isCurrent = idx === currentIndex;
+            let bgClass = 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200';
+            let icon = null;
+
             if (record) {
-              bgClass = record.isCorrect
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-red-100 text-red-700 hover:bg-red-200';
+              if (record.isCorrect) {
+                bgClass = 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300';
+                icon = <CheckCircle2 className="h-3 w-3 text-green-600" />;
+              } else {
+                bgClass = 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300';
+                icon = <XCircle className="h-3 w-3 text-red-500" />;
+              }
             }
-            if (idx === currentIndex) {
-              bgClass = 'bg-blue-600 text-white ring-2 ring-blue-300';
+
+            if (isCurrent) {
+              bgClass = 'bg-blue-600 text-white ring-2 ring-blue-300 border-blue-600 shadow-md';
+              icon = null;
             }
+
             return (
               <button
                 key={q.id}
                 onClick={() => goToQuestion(idx)}
-                className={`w-8 h-8 rounded-md text-xs font-medium transition-all ${bgClass}`}
+                className={`relative w-8 h-8 rounded-md text-xs font-medium transition-all flex items-center justify-center ${bgClass}`}
+                title={`第${idx + 1}题${record ? (record.isCorrect ? ' - 答对' : ' - 答错') : ' - 未答'}`}
               >
-                {idx + 1}
+                {isCurrent ? idx + 1 : (icon || idx + 1)}
               </button>
             );
           })}
@@ -998,6 +1110,59 @@ function ExamResults() {
                 </div>
               );
             })}
+          </CardContent>
+        </Card>
+
+        {/* Per-question results */}
+        <Card className="border-blue-100 shadow-sm mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-700">每题作答详情</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-1.5">
+              {allQuestions.map((q, idx) => {
+                const record = answers[q.id];
+                let bgClass = 'bg-gray-100 text-gray-500 border border-gray-200';
+                let icon = null;
+                let statusText = '未答';
+
+                if (record) {
+                  if (record.isCorrect) {
+                    bgClass = 'bg-green-100 text-green-700 border border-green-300';
+                    icon = <CheckCircle2 className="h-3 w-3 text-green-600" />;
+                    statusText = '答对';
+                  } else {
+                    bgClass = 'bg-red-100 text-red-700 border border-red-300';
+                    icon = <XCircle className="h-3 w-3 text-red-500" />;
+                    statusText = '答错';
+                  }
+                }
+
+                return (
+                  <div
+                    key={q.id}
+                    className={`relative w-9 h-9 rounded-md text-xs font-medium flex items-center justify-center ${bgClass}`}
+                    title={`第${idx + 1}题 - ${statusText}`}
+                  >
+                    {icon || idx + 1}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-sm bg-gray-100 border border-gray-300 inline-block" />
+                未作答
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                答对
+              </span>
+              <span className="flex items-center gap-1">
+                <XCircle className="h-3 w-3 text-red-500" />
+                答错
+              </span>
+            </div>
           </CardContent>
         </Card>
 
