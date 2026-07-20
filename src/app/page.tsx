@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { QuizProvider, useQuiz } from '@/components/QuizContext';
 import {
   allQuestions,
@@ -113,10 +113,10 @@ function FilterBar() {
 
 /* ======================== Choice Question ======================== */
 function ChoiceQuestion({ question, answered }: { question: Question; answered: boolean }) {
-  const { submitAnswer, answers, examMode, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
+  const { submitAnswer, answers, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [selected, setSelected] = useState<string>('');
-  const [showResult, setShowResult] = useState(false);
-  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const record = answers[question.id];
   const isAnswered = record !== undefined;
@@ -126,33 +126,29 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
-      if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
-  }, [autoAdvanceTimer]);
+  }, []);
 
   // Auto-advance after answering (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (isAnswered && autoAdvance && !autoAdvanceTimer) {
+    if (submitted && autoAdvance) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
-        const timer = setTimeout(() => {
+        advanceTimerRef.current = setTimeout(() => {
           goToNext();
         }, 500);
-        setAutoAdvanceTimer(timer);
       }
     }
-  }, [isAnswered, autoAdvance, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
+  }, [submitted, autoAdvance, currentIndex, filteredQuestions.length, goToNext]);
 
   const handleSelect = (value: string) => {
-    if (isAnswered) return;
+    if (isAnswered || submitted) return;
     setSelected(value);
-  };
-
-  const handleSubmit = () => {
-    if (!selected || isAnswered) return;
-    const correct = selected.trim().toUpperCase() === question.answer.trim().toUpperCase();
-    submitAnswer(question.id, selected, correct);
-    setShowResult(true);
+    // Auto-submit immediately after selection
+    const correct = value.trim().toUpperCase() === question.answer.trim().toUpperCase();
+    submitAnswer(question.id, value, correct);
+    setSubmitted(true);
   };
 
   const optionLetter = (opt: string): string => {
@@ -162,7 +158,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
   return (
     <div className="space-y-4">
-      <RadioGroup value={userAnswer} onValueChange={handleSelect} className="space-y-2">
+      <RadioGroup value={userAnswer} className="space-y-2">
         {question.options?.map((opt, idx) => {
           const letter = optionLetter(opt);
           const isSelected = userAnswer === letter;
@@ -170,7 +166,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
           let borderColor = 'border-gray-200';
           let bgColor = 'bg-white';
 
-          if (isAnswered || showResult) {
+          if (isAnswered || submitted) {
             if (isCorrectOption) {
               borderColor = 'border-green-500';
               bgColor = 'bg-green-50';
@@ -186,17 +182,17 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
           return (
             <div
               key={idx}
-              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${!isAnswered ? 'hover:border-blue-300' : ''}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${!isAnswered && !submitted ? 'hover:border-blue-300' : ''}`}
               onClick={() => handleSelect(letter)}
             >
               <RadioGroupItem value={letter} id={`opt-${question.id}-${idx}`} className="shrink-0" />
               <Label htmlFor={`opt-${question.id}-${idx}`} className="flex-1 cursor-pointer text-sm leading-relaxed">
                 {opt}
               </Label>
-              {(isAnswered || showResult) && isCorrectOption && (
+              {(isAnswered || submitted) && isCorrectOption && (
                 <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
               )}
-              {(isAnswered || showResult) && isSelected && !isCorrect && (
+              {(isAnswered || submitted) && isSelected && !isCorrect && (
                 <XCircle className="h-5 w-5 text-red-500 shrink-0" />
               )}
             </div>
@@ -204,17 +200,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
         })}
       </RadioGroup>
 
-      {!isAnswered && (
-        <Button
-          onClick={handleSubmit}
-          disabled={!selected}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          提交答案
-        </Button>
-      )}
-
-      {(isAnswered || showResult) && (
+      {(isAnswered || submitted) && (
         <div className={`p-4 rounded-lg border ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
           <div className="flex items-center gap-2 mb-2">
             {isCorrect ? (
@@ -242,11 +228,11 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
 /* ======================== Text Question (Fill / Short Answer / Case / Essay) ======================== */
 function TextQuestion({ question }: { question: Question }) {
-  const { submitAnswer, answers, examMode, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
+  const { submitAnswer, answers, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [userInput, setUserInput] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [selfEval, setSelfEval] = useState<'correct' | 'wrong' | null>(null);
-  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const record = answers[question.id];
   const isAnswered = record !== undefined;
@@ -254,22 +240,21 @@ function TextQuestion({ question }: { question: Question }) {
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
-      if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
-  }, [autoAdvanceTimer]);
+  }, []);
 
   // Auto-advance after self-evaluation (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (selfEval && autoAdvance && !autoAdvanceTimer) {
+    if (selfEval && autoAdvance) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
-        const timer = setTimeout(() => {
+        advanceTimerRef.current = setTimeout(() => {
           goToNext();
         }, 500);
-        setAutoAdvanceTimer(timer);
       }
     }
-  }, [selfEval, autoAdvance, currentIndex, filteredQuestions.length, goToNext, autoAdvanceTimer]);
+  }, [selfEval, autoAdvance, currentIndex, filteredQuestions.length, goToNext]);
 
   const handleSubmit = () => {
     if (!userInput.trim() || isAnswered) return;
