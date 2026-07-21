@@ -46,27 +46,29 @@ function FilterBar() {
   const { subjectFilter, setSubjectFilter, typeFilter, setTypeFilter } = useQuiz();
 
   return (
-    <Card className="border-blue-100 shadow-sm">
+    <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
       <CardContent className="pt-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-gray-700">筛选条件</span>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+            <Filter className="h-3.5 w-3.5 text-indigo-500" />
+          </div>
+          <span className="text-sm font-semibold text-gray-600">筛选条件</span>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Subject filter */}
           <div>
-            <span className="text-xs text-gray-500 mb-1.5 block">科目</span>
+            <span className="text-xs text-gray-400 mb-2 block font-medium">科目</span>
             <div className="flex flex-wrap gap-2">
               <Badge
                 variant={subjectFilter === 'all' ? 'default' : 'outline'}
-                className={`cursor-pointer transition-all ${subjectFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-blue-50'}`}
+                className={`cursor-pointer transition-all rounded-lg ${subjectFilter === 'all' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm shadow-indigo-200' : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
                 onClick={() => setSubjectFilter('all')}
               >
                 全部
               </Badge>
               <Badge
                 variant={subjectFilter === 'education' ? 'default' : 'outline'}
-                className={`cursor-pointer transition-all ${subjectFilter === 'education' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-blue-50'}`}
+                className={`cursor-pointer transition-all rounded-lg ${subjectFilter === 'education' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm shadow-indigo-200' : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
                 onClick={() => setSubjectFilter('education')}
               >
                 <GraduationCap className="h-3 w-3 mr-1" />
@@ -74,7 +76,7 @@ function FilterBar() {
               </Badge>
               <Badge
                 variant={subjectFilter === 'psychology' ? 'default' : 'outline'}
-                className={`cursor-pointer transition-all ${subjectFilter === 'psychology' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-blue-50'}`}
+                className={`cursor-pointer transition-all rounded-lg ${subjectFilter === 'psychology' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm shadow-indigo-200' : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
                 onClick={() => setSubjectFilter('psychology')}
               >
                 <Brain className="h-3 w-3 mr-1" />
@@ -84,11 +86,11 @@ function FilterBar() {
           </div>
           {/* Type filter */}
           <div>
-            <span className="text-xs text-gray-500 mb-1.5 block">题型</span>
+            <span className="text-xs text-gray-400 mb-2 block font-medium">题型</span>
             <div className="flex flex-wrap gap-2">
               <Badge
                 variant={typeFilter === 'all' ? 'default' : 'outline'}
-                className={`cursor-pointer transition-all ${typeFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-blue-50'}`}
+                className={`cursor-pointer transition-all rounded-lg ${typeFilter === 'all' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm shadow-indigo-200' : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
                 onClick={() => setTypeFilter('all')}
               >
                 全部
@@ -97,7 +99,7 @@ function FilterBar() {
                 <Badge
                   key={key}
                   variant={typeFilter === key ? 'default' : 'outline'}
-                  className={`cursor-pointer transition-all ${typeFilter === key ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-blue-50'}`}
+                  className={`cursor-pointer transition-all rounded-lg ${typeFilter === key ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm shadow-indigo-200' : 'border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'}`}
                   onClick={() => setTypeFilter(key)}
                 >
                   {label}
@@ -158,42 +160,46 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
   return (
     <div className="space-y-4">
-      <RadioGroup value={userAnswer} className="space-y-2">
+      <RadioGroup value={userAnswer} className="space-y-2.5">
         {question.options?.map((opt, idx) => {
           const letter = optionLetter(opt);
           const isSelected = userAnswer === letter;
           const isCorrectOption = letter === question.answer;
-          let borderColor = 'border-gray-200';
+          let borderColor = 'border-gray-200/80';
           let bgColor = 'bg-white';
+          let shadow = '';
 
           if (isAnswered || submitted) {
             if (isCorrectOption) {
-              borderColor = 'border-green-500';
-              bgColor = 'bg-green-50';
+              borderColor = 'border-emerald-400';
+              bgColor = 'bg-gradient-to-r from-emerald-50/80 to-green-50/50';
+              shadow = 'shadow-sm shadow-emerald-100';
             } else if (isSelected && !isCorrect) {
-              borderColor = 'border-red-500';
-              bgColor = 'bg-red-50';
+              borderColor = 'border-rose-300';
+              bgColor = 'bg-gradient-to-r from-rose-50/80 to-red-50/50';
+              shadow = 'shadow-sm shadow-rose-100';
             }
           } else if (isSelected) {
-            borderColor = 'border-blue-500';
-            bgColor = 'bg-blue-50';
+            borderColor = 'border-indigo-400';
+            bgColor = 'bg-gradient-to-r from-indigo-50/80 to-purple-50/50';
+            shadow = 'shadow-sm shadow-indigo-100';
           }
 
           return (
             <div
               key={idx}
-              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${!isAnswered && !submitted ? 'hover:border-blue-300' : ''}`}
+              className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${shadow} ${!isAnswered && !submitted ? 'hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-50' : ''}`}
               onClick={() => handleSelect(letter)}
             >
               <RadioGroupItem value={letter} id={`opt-${question.id}-${idx}`} className="shrink-0" />
-              <Label htmlFor={`opt-${question.id}-${idx}`} className="flex-1 cursor-pointer text-sm leading-relaxed">
+              <Label htmlFor={`opt-${question.id}-${idx}`} className="flex-1 cursor-pointer text-sm leading-relaxed text-gray-700">
                 {opt}
               </Label>
               {(isAnswered || submitted) && isCorrectOption && (
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
               )}
               {(isAnswered || submitted) && isSelected && !isCorrect && (
-                <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                <XCircle className="h-5 w-5 text-rose-400 shrink-0" />
               )}
             </div>
           );
@@ -201,12 +207,12 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
       </RadioGroup>
 
       {(isAnswered || submitted) && (
-        <div className={`p-4 rounded-lg border ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+        <div className={`p-4 rounded-xl border ${isCorrect ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/60 to-green-50/40' : 'border-rose-200 bg-gradient-to-r from-rose-50/60 to-red-50/40'}`}>
           <div className="flex items-center gap-2 mb-2">
             {isCorrect ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             ) : (
-              <XCircle className="h-5 w-5 text-red-500" />
+              <XCircle className="h-5 w-5 text-rose-400" />
             )}
             <span className={`font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
               {isCorrect ? '回答正确!' : '回答错误'}
@@ -366,7 +372,7 @@ function QuestionCard() {
 
   if (!question) {
     return (
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
         <CardContent className="pt-8 text-center">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">当前筛选条件下没有题目</p>
@@ -385,31 +391,31 @@ function QuestionCard() {
   const allAnswered = filteredQuestions.every((q) => answers[q.id] !== undefined);
 
   return (
-    <Card className="border-blue-100 shadow-sm">
-      <CardHeader className="pb-4">
+    <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
+      <CardHeader className="pb-4 bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-transparent border-b border-indigo-100/40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
+            <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50/50 rounded-lg">
               {subjectLabel}
             </Badge>
-            <Badge variant="outline" className="text-gray-600 border-gray-200">
+            <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50/50 rounded-lg">
               {typeLabel}
             </Badge>
             {isAnswered && (
-              <Badge className="bg-green-100 text-green-700 border-green-200" variant="outline">
+              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 rounded-lg" variant="outline">
                 已答
               </Badge>
             )}
           </div>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-400 font-medium bg-white/60 px-2.5 py-1 rounded-full border border-gray-100">
             {currentIndex + 1} / {filteredQuestions.length}
           </span>
         </div>
-        <CardTitle className="text-base font-medium text-gray-800 leading-relaxed mt-3">
+        <CardTitle className="text-base font-medium text-gray-700 leading-relaxed mt-3">
           {question.question}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
         {question.type === 'choice' ? (
           <ChoiceQuestion question={question} answered={isAnswered} />
         ) : (
@@ -418,12 +424,12 @@ function QuestionCard() {
 
         {/* All questions answered indicator in exam mode */}
         {examMode === 'exam' && allAnswered && isLastQuestion && (
-          <div className="mt-4 p-4 rounded-lg border border-green-200 bg-green-50">
+          <div className="mt-4 p-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/60 to-green-50/40">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <span className="font-medium text-green-700">所有题目已完成!</span>
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              <span className="font-medium text-emerald-700">所有题目已完成!</span>
             </div>
-            <p className="text-sm text-green-600 mb-3">
+            <p className="text-sm text-emerald-600 mb-3">
               你已完成当前筛选条件下的所有题目，可以提交试卷查看成绩。
             </p>
             <Button
@@ -464,21 +470,26 @@ function QuestionNavigator() {
   const unanswered = filteredQuestions.length - answeredCorrect - answeredWrong;
 
   return (
-    <Card className="border-blue-100 shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50/30 to-transparent">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-gray-700">题目导航</CardTitle>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <CardTitle className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+            <div className="w-6 h-6 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-md flex items-center justify-center">
+              <ListChecks className="h-3.5 w-3.5 text-indigo-500" />
+            </div>
+            题目导航
+          </CardTitle>
+          <div className="flex items-center gap-3 text-xs text-gray-400">
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-gray-100 border border-gray-300 inline-block" />
+              <span className="w-3 h-3 rounded-md bg-gray-100 border border-gray-200 inline-block" />
               未答 {unanswered}
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-green-100 border border-green-300 inline-block" />
+              <span className="w-3 h-3 rounded-md bg-emerald-100 border border-emerald-300 inline-block" />
               答对 {answeredCorrect}
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-red-100 border border-red-300 inline-block" />
+              <span className="w-3 h-3 rounded-md bg-rose-100 border border-rose-300 inline-block" />
               答错 {answeredWrong}
             </span>
           </div>
@@ -489,21 +500,21 @@ function QuestionNavigator() {
           {filteredQuestions.map((q, idx) => {
             const record = answers[q.id];
             const isCurrent = idx === currentIndex;
-            let bgClass = 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200';
+            let bgClass = 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200/80';
             let icon = null;
 
             if (record) {
               if (record.isCorrect) {
-                bgClass = 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300';
-                icon = <CheckCircle2 className="h-3 w-3 text-green-600" />;
+                bgClass = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200';
+                icon = <CheckCircle2 className="h-3 w-3 text-emerald-500" />;
               } else {
-                bgClass = 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300';
-                icon = <XCircle className="h-3 w-3 text-red-500" />;
+                bgClass = 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200';
+                icon = <XCircle className="h-3 w-3 text-rose-400" />;
               }
             }
 
             if (isCurrent) {
-              bgClass = 'bg-blue-600 text-white ring-2 ring-blue-300 border-blue-600 shadow-md';
+              bgClass = 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white ring-2 ring-indigo-200 border-indigo-500 shadow-md shadow-indigo-200';
               icon = null;
             }
 
@@ -511,7 +522,7 @@ function QuestionNavigator() {
               <button
                 key={q.id}
                 onClick={() => goToQuestion(idx)}
-                className={`relative w-8 h-8 rounded-md text-xs font-medium transition-all flex items-center justify-center ${bgClass}`}
+                className={`relative w-8 h-8 rounded-lg text-xs font-medium transition-all flex items-center justify-center ${bgClass}`}
                 title={`第${idx + 1}题${record ? (record.isCorrect ? ' - 答对' : ' - 答错') : ' - 未答'}`}
               >
                 {isCurrent ? idx + 1 : (icon || idx + 1)}
@@ -525,12 +536,12 @@ function QuestionNavigator() {
             size="sm"
             onClick={goToPrev}
             disabled={currentIndex === 0}
-            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-lg"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             上一题
           </Button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-400">
             {currentIndex + 1} / {filteredQuestions.length}
           </span>
           <Button
@@ -538,7 +549,7 @@ function QuestionNavigator() {
             size="sm"
             onClick={goToNext}
             disabled={currentIndex >= filteredQuestions.length - 1}
-            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-lg"
           >
             下一题
             <ChevronRight className="h-4 w-4 ml-1" />
@@ -561,7 +572,7 @@ function WrongBook() {
 
   if (wrongQuestions.length === 0) {
     return (
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
         <CardContent className="pt-12 text-center">
           <CheckCircle2 className="h-16 w-16 text-green-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-700 mb-2">暂无错题</h3>
@@ -587,46 +598,46 @@ function WrongBook() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50 text-xs">
+                    <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50/50 text-xs rounded-lg">
                       {SUBJECT_LABELS[q.subject]}
                     </Badge>
-                    <Badge variant="outline" className="text-gray-600 border-gray-200 text-xs">
+                    <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50/50 text-xs rounded-lg">
                       {QUESTION_TYPE_LABELS[q.type]}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed">{q.question}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{q.question}</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                  className="shrink-0 text-blue-600"
+                  className="shrink-0 text-indigo-500 hover:text-indigo-600"
                 >
                   {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
 
               {isExpanded && (
-                <div className="mt-3 space-y-2 pt-3 border-t border-gray-100">
+                <div className="mt-3 space-y-2 pt-3 border-t border-indigo-100/50">
                   {record && (
                     <p className="text-sm">
-                      <span className="text-gray-500">你的答案：</span>
-                      <span className="text-red-600 font-medium">{record.userAnswer}</span>
+                      <span className="text-gray-400">你的答案：</span>
+                      <span className="text-rose-500 font-medium">{record.userAnswer}</span>
                     </p>
                   )}
                   <p className="text-sm">
-                    <span className="text-gray-500">正确答案：</span>
-                    <span className="text-green-600 font-medium">
+                    <span className="text-gray-400">正确答案：</span>
+                    <span className="text-emerald-500 font-medium">
                       {q.type === 'choice' ? q.answer : q.answer.slice(0, 100) + (q.answer.length > 100 ? '...' : '')}
                     </span>
                   </p>
                   {q.explanation && (
-                    <p className="text-sm text-gray-600">{q.explanation}</p>
+                    <p className="text-sm text-gray-500">{q.explanation}</p>
                   )}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-green-600 border-green-200 hover:bg-green-50 mt-2"
+                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 mt-2 rounded-lg"
                     onClick={() => removeWrongQuestion(q.id)}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -697,25 +708,25 @@ function ProgressPanel() {
     <div className="space-y-4">
       {/* Overview cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{answeredCount}</p>
             <p className="text-xs text-gray-500 mt-1">已答题数</p>
           </CardContent>
         </Card>
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold text-green-600">{correctCount}</p>
             <p className="text-xs text-gray-500 mt-1">答对题数</p>
           </CardContent>
         </Card>
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold text-amber-600">{wrongIds.length}</p>
             <p className="text-xs text-gray-500 mt-1">错题数</p>
           </CardContent>
         </Card>
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold text-purple-600">{accuracy}%</p>
             <p className="text-xs text-gray-500 mt-1">总正确率</p>
@@ -724,7 +735,7 @@ function ProgressPanel() {
       </div>
 
       {/* Overall progress */}
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-700">总体进度</CardTitle>
         </CardHeader>
@@ -739,7 +750,7 @@ function ProgressPanel() {
 
       {/* Choice accuracy */}
       {choiceAnsweredCount > 0 && (
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-700">选择题正确率</CardTitle>
           </CardHeader>
@@ -754,7 +765,7 @@ function ProgressPanel() {
       )}
 
       {/* Per subject */}
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-700">科目完成情况</CardTitle>
         </CardHeader>
@@ -775,7 +786,7 @@ function ProgressPanel() {
       </Card>
 
       {/* Per type */}
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-700">题型完成情况</CardTitle>
         </CardHeader>
@@ -852,23 +863,25 @@ function CountdownTimer() {
   const isWarning = examRemainingSeconds <= 600; // Last 10 minutes
 
   return (
-    <div className={`sticky top-[105px] z-40 flex items-center justify-between px-4 py-2.5 border-b transition-colors ${
-      isWarning ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-100'
+    <div className={`sticky top-[105px] z-40 flex items-center justify-between px-4 py-3 border-b transition-all ${
+      isWarning ? 'bg-gradient-to-r from-rose-50/80 to-red-50/60 border-rose-200/60 backdrop-blur-sm' : 'bg-gradient-to-r from-indigo-50/60 to-purple-50/40 border-indigo-100/50 backdrop-blur-sm'
     }`}>
       <div className="flex items-center gap-2">
-        <Clock className={`h-4 w-4 ${isWarning ? 'text-red-600 animate-pulse' : 'text-blue-600'}`} />
-        <span className={`text-sm font-medium ${isWarning ? 'text-red-700' : 'text-blue-700'}`}>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isWarning ? 'bg-rose-100' : 'bg-indigo-100'}`}>
+          <Clock className={`h-3.5 w-3.5 ${isWarning ? 'text-rose-500 animate-pulse' : 'text-indigo-500'}`} />
+        </div>
+        <span className={`text-sm font-semibold ${isWarning ? 'text-rose-600' : 'text-indigo-600'}`}>
           考试模式
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          isWarning ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+          isWarning ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'
         }`}>
           {isWarning ? '即将结束!' : '进行中'}
         </span>
       </div>
       <div className="flex items-center gap-3">
         <span className={`font-mono text-lg font-bold tracking-wider ${
-          isWarning ? 'text-red-600' : 'text-blue-700'
+          isWarning ? 'text-rose-500' : 'text-indigo-600'
         }`}>
           {timeStr}
         </span>
@@ -877,7 +890,7 @@ function CountdownTimer() {
             variant="ghost"
             size="sm"
             onClick={togglePauseExam}
-            className={`h-7 px-2 ${examPaused ? 'text-green-600 hover:bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}
+            className={`h-7 px-2 rounded-lg ${examPaused ? 'text-emerald-500 hover:bg-emerald-50' : 'text-gray-400 hover:bg-gray-50'}`}
             title={examPaused ? '继续' : '暂停'}
           >
             {examPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
@@ -890,7 +903,7 @@ function CountdownTimer() {
                 endExam();
               }
             }}
-            className="h-7 px-2 text-red-500 hover:bg-red-50"
+            className="h-7 px-2 text-rose-400 hover:bg-rose-50 rounded-lg"
             title="提前交卷"
           >
             交卷
@@ -1029,25 +1042,25 @@ function ExamResults() {
 
         {/* Score cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <Card className="border-blue-100 shadow-sm">
+          <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
             <CardContent className="pt-4 pb-4 text-center">
               <p className="text-2xl font-bold text-blue-600">{answeredCount}</p>
               <p className="text-xs text-gray-500 mt-1">已答题数</p>
             </CardContent>
           </Card>
-          <Card className="border-blue-100 shadow-sm">
+          <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
             <CardContent className="pt-4 pb-4 text-center">
               <p className="text-2xl font-bold text-green-600">{correctCount}</p>
               <p className="text-xs text-gray-500 mt-1">答对题数</p>
             </CardContent>
           </Card>
-          <Card className="border-blue-100 shadow-sm">
+          <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
             <CardContent className="pt-4 pb-4 text-center">
               <p className="text-2xl font-bold text-amber-600">{wrongIds.length}</p>
               <p className="text-xs text-gray-500 mt-1">错题数</p>
             </CardContent>
           </Card>
-          <Card className="border-blue-100 shadow-sm">
+          <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20">
             <CardContent className="pt-4 pb-4 text-center">
               <p className="text-2xl font-bold text-purple-600">{accuracy}%</p>
               <p className="text-xs text-gray-500 mt-1">总正确率</p>
@@ -1057,7 +1070,7 @@ function ExamResults() {
 
         {/* Choice accuracy */}
         {choiceAnsweredCount > 0 && (
-          <Card className="border-blue-100 shadow-sm mb-4">
+          <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Target className="h-4 w-4 text-blue-600" />
@@ -1075,7 +1088,7 @@ function ExamResults() {
         )}
 
         {/* Subject breakdown */}
-        <Card className="border-blue-100 shadow-sm mb-6">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-700">科目完成情况</CardTitle>
           </CardHeader>
@@ -1099,7 +1112,7 @@ function ExamResults() {
         </Card>
 
         {/* Per-question results */}
-        <Card className="border-blue-100 shadow-sm mb-6">
+        <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-700">每题作答详情</CardTitle>
           </CardHeader>
@@ -1183,7 +1196,7 @@ function MainContent() {
   switch (view) {
     case 'practice':
       return (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <FilterBar />
           <QuestionCard />
           <QuestionNavigator />
@@ -1230,18 +1243,18 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-blue-100 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-indigo-100/50 sticky top-0 z-50 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-4 w-4 text-white" />
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+                <BookOpen className="h-4.5 w-4.5 text-white" />
               </div>
               <div>
-                <h1 className="text-base font-bold text-gray-800 leading-tight">教育理论刷题</h1>
-                <p className="text-xs text-gray-500">2026河南专升本</p>
+                <h1 className="text-base font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight">教育理论刷题</h1>
+                <p className="text-xs text-gray-400">2026河南专升本</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1288,21 +1301,21 @@ function AppShell() {
             </div>
           </div>
           <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-            <TabsList className="w-full bg-gray-100 p-1">
-              <TabsTrigger value="practice" className="flex-1 text-sm">
+            <TabsList className="w-full bg-gradient-to-r from-indigo-50/50 to-purple-50/50 p-1 rounded-xl border border-indigo-100/50">
+              <TabsTrigger value="practice" className="flex-1 text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600">
                 <BookOpen className="h-3.5 w-3.5 mr-1.5" />
                 刷题练习
               </TabsTrigger>
-              <TabsTrigger value="wrong_book" className="flex-1 text-sm relative">
+              <TabsTrigger value="wrong_book" className="flex-1 text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 relative">
                 <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
                 错题本
                 {wrongIds.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-rose-400 to-red-500 text-white text-[10px] rounded-full flex items-center justify-center shadow-sm">
                     {wrongIds.length > 9 ? '9+' : wrongIds.length}
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="progress" className="flex-1 text-sm">
+              <TabsTrigger value="progress" className="flex-1 text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600">
                 <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
                 学习进度
               </TabsTrigger>
@@ -1318,7 +1331,7 @@ function AppShell() {
       {examMode === 'exam' && examPaused && !examFinished && <PausedOverlay />}
 
       {/* Content */}
-      <main className="max-w-3xl mx-auto px-4 py-4 pb-8">
+      <main className="max-w-3xl mx-auto px-4 py-6 pb-10">
         <MainContent />
       </main>
 

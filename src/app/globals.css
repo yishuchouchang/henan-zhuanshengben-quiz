@@ -129,9 +129,68 @@
   }
   body {
     @apply bg-background text-foreground;
+    background: linear-gradient(135deg, #f0f7ff 0%, #f5f3ff 50%, #ecfdf5 100%);
+    min-height: 100vh;
   }
 }
 
 body {
   @apply font-sans;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a5b4fc;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, [role="button"] {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.1), 0 4px 10px -5px rgba(99, 102, 241, 0.05);
+}
+
+/* Soft glow for selected items */
+.soft-glow {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 4px 12px -2px rgba(99, 102, 241, 0.15);
+}
+
+/* Gradient button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.4);
+}
+
+/* Soft correct/wrong colors */
+.correct-soft {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+.wrong-soft {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+  color: #991b1b;
 }
