@@ -114,16 +114,24 @@ function FilterBar() {
 }
 
 /* ======================== Choice Question ======================== */
-function ChoiceQuestion({ question, answered }: { question: Question; answered: boolean }) {
-  const { submitAnswer, answers, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
+function ChoiceQuestion({ question, answered: _answered }: { question: Question; answered: boolean }) {
+  const { saveDraftAnswer, draftAnswers, answers, submitted: globalSubmitted, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [selected, setSelected] = useState<string>('');
-  const [submitted, setSubmitted] = useState(false);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const draftAnswer = draftAnswers[question.id];
   const record = answers[question.id];
+  const hasDraft = draftAnswer !== undefined;
   const isAnswered = record !== undefined;
-  const userAnswer = record?.userAnswer || selected;
+  const userAnswer = record?.userAnswer || draftAnswer || selected;
   const isCorrect = record?.isCorrect;
+
+  // Initialize selected from draft if exists
+  useEffect(() => {
+    if (draftAnswer && !selected) {
+      setSelected(draftAnswer);
+    }
+  }, [draftAnswer, selected]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -132,9 +140,9 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
     };
   }, []);
 
-  // Auto-advance after answering (both modes, controlled by autoAdvance toggle)
+  // Auto-advance after selecting (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (submitted && autoAdvance) {
+    if (hasDraft && autoAdvance && !globalSubmitted) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
         advanceTimerRef.current = setTimeout(() => {
@@ -142,21 +150,21 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
         }, 500);
       }
     }
-  }, [submitted, autoAdvance, currentIndex, filteredQuestions.length, goToNext]);
+  }, [hasDraft, autoAdvance, globalSubmitted, currentIndex, filteredQuestions.length, goToNext]);
 
   const handleSelect = (value: string) => {
-    if (isAnswered || submitted) return;
+    if (hasDraft || globalSubmitted) return;
     setSelected(value);
-    // Auto-submit immediately after selection
-    const correct = value.trim().toUpperCase() === question.answer.trim().toUpperCase();
-    submitAnswer(question.id, value, correct);
-    setSubmitted(true);
+    saveDraftAnswer(question.id, value);
   };
 
   const optionLetter = (opt: string): string => {
     const match = opt.match(/^([A-Da-d])/);
     return match ? match[1].toUpperCase() : '';
   };
+
+  // Show results only after global submission
+  const showResult = globalSubmitted && isAnswered;
 
   return (
     <div className="space-y-4">
@@ -169,7 +177,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
           let bgColor = 'bg-white';
           let shadow = '';
 
-          if (isAnswered || submitted) {
+          if (showResult) {
             if (isCorrectOption) {
               borderColor = 'border-emerald-400';
               bgColor = 'bg-gradient-to-r from-emerald-50/80 to-green-50/50';
@@ -188,17 +196,17 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
           return (
             <div
               key={idx}
-              className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${shadow} ${!isAnswered && !submitted ? 'hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-50' : ''}`}
+              className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${borderColor} ${bgColor} ${shadow} ${!hasDraft && !globalSubmitted ? 'hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-50' : ''}`}
               onClick={() => handleSelect(letter)}
             >
-              <RadioGroupItem value={letter} id={`opt-${question.id}-${idx}`} className="shrink-0" />
+              <RadioGroupItem value={letter} id={`opt-${question.id}-${idx}`} className="shrink-0" disabled={hasDraft || globalSubmitted} />
               <Label htmlFor={`opt-${question.id}-${idx}`} className="flex-1 cursor-pointer text-sm leading-relaxed text-gray-700">
                 {opt}
               </Label>
-              {(isAnswered || submitted) && isCorrectOption && (
+              {showResult && isCorrectOption && (
                 <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
               )}
-              {(isAnswered || submitted) && isSelected && !isCorrect && (
+              {showResult && isSelected && !isCorrect && (
                 <XCircle className="h-5 w-5 text-rose-400 shrink-0" />
               )}
             </div>
@@ -206,7 +214,7 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
         })}
       </RadioGroup>
 
-      {(isAnswered || submitted) && (
+      {showResult && (
         <div className={`p-4 rounded-xl border ${isCorrect ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/60 to-green-50/40' : 'border-rose-200 bg-gradient-to-r from-rose-50/60 to-red-50/40'}`}>
           <div className="flex items-center gap-2 mb-2">
             {isCorrect ? (
@@ -234,14 +242,21 @@ function ChoiceQuestion({ question, answered }: { question: Question; answered: 
 
 /* ======================== Text Question (Fill / Short Answer / Case / Essay) ======================== */
 function TextQuestion({ question }: { question: Question }) {
-  const { submitAnswer, answers, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
+  const { saveDraftAnswer, draftAnswers, answers, submitted: globalSubmitted, autoAdvance, goToNext, filteredQuestions, currentIndex } = useQuiz();
   const [userInput, setUserInput] = useState('');
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [selfEval, setSelfEval] = useState<'correct' | 'wrong' | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const draftAnswer = draftAnswers[question.id];
   const record = answers[question.id];
+  const hasDraft = draftAnswer !== undefined;
   const isAnswered = record !== undefined;
+
+  // Initialize userInput from draft if exists
+  useEffect(() => {
+    if (draftAnswer && !userInput) {
+      setUserInput(draftAnswer);
+    }
+  }, [draftAnswer, userInput]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -250,9 +265,9 @@ function TextQuestion({ question }: { question: Question }) {
     };
   }, []);
 
-  // Auto-advance after self-evaluation (both modes, controlled by autoAdvance toggle)
+  // Auto-advance after confirming answer (both modes, controlled by autoAdvance toggle)
   useEffect(() => {
-    if (selfEval && autoAdvance) {
+    if (hasDraft && autoAdvance && !globalSubmitted) {
       const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
       if (!isLastQuestion) {
         advanceTimerRef.current = setTimeout(() => {
@@ -260,32 +275,24 @@ function TextQuestion({ question }: { question: Question }) {
         }, 500);
       }
     }
-  }, [selfEval, autoAdvance, currentIndex, filteredQuestions.length, goToNext]);
+  }, [hasDraft, autoAdvance, globalSubmitted, currentIndex, filteredQuestions.length, goToNext]);
 
-  const handleSubmit = () => {
-    if (!userInput.trim() || isAnswered) return;
-    // For text questions, we mark as answered but don't auto-judge
-    submitAnswer(question.id, userInput, false); // temporarily mark as wrong
-    setShowAnswer(true);
-  };
-
-  const handleSelfEval = (eval_: 'correct' | 'wrong') => {
-    setSelfEval(eval_);
-    if (isAnswered) {
-      submitAnswer(question.id, record?.userAnswer || userInput, eval_ === 'correct');
-    }
+  const handleConfirm = () => {
+    if (!userInput.trim() || hasDraft || globalSubmitted) return;
+    saveDraftAnswer(question.id, userInput.trim());
   };
 
   const isTextarea = question.type === 'short_answer' || question.type === 'case_analysis' || question.type === 'essay';
+  const showResult = globalSubmitted && isAnswered;
 
   return (
     <div className="space-y-4">
       {isTextarea ? (
         <Textarea
           placeholder="请输入你的答案..."
-          value={isAnswered ? record?.userAnswer || '' : userInput}
+          value={hasDraft ? draftAnswer : userInput}
           onChange={(e) => setUserInput(e.target.value)}
-          disabled={isAnswered}
+          disabled={hasDraft || globalSubmitted}
           className="min-h-[160px] text-sm leading-relaxed resize-y"
           rows={6}
         />
@@ -294,69 +301,56 @@ function TextQuestion({ question }: { question: Question }) {
           <input
             type="text"
             placeholder="请输入你的答案..."
-            value={isAnswered ? record?.userAnswer || '' : userInput}
+            value={hasDraft ? draftAnswer : userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            disabled={isAnswered}
+            disabled={hasDraft || globalSubmitted}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
           />
         </div>
       )}
 
-      {!isAnswered && (
+      {!hasDraft && !globalSubmitted && (
         <div className="flex gap-2">
           <Button
-            onClick={handleSubmit}
+            onClick={handleConfirm}
             disabled={!userInput.trim()}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-none shadow-sm shadow-indigo-200"
           >
-            提交并查看答案
+            确认答案
           </Button>
         </div>
       )}
 
-      {(showAnswer || isAnswered) && (
+      {hasDraft && !globalSubmitted && (
+        <div className="p-3 rounded-lg border border-indigo-200 bg-indigo-50">
+          <span className="text-sm text-indigo-700">答案已保存，继续做题吧！</span>
+        </div>
+      )}
+
+      {showResult && (
         <div className="space-y-3">
-          <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
+          <div className={`p-4 rounded-xl border ${record?.isCorrect ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/60 to-green-50/40' : 'border-rose-200 bg-gradient-to-r from-rose-50/60 to-red-50/40'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              {record?.isCorrect ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              ) : (
+                <XCircle className="h-5 w-5 text-rose-400" />
+              )}
+              <span className={`font-medium ${record?.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                {record?.isCorrect ? '回答正确!' : '回答错误'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/60 to-indigo-50/40">
             <p className="text-sm font-medium text-blue-800 mb-1">参考答案：</p>
             <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{question.answer}</p>
           </div>
 
           {question.explanation && (
-            <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/60">
               <p className="text-sm font-medium text-gray-700 mb-1">解析提示：</p>
               <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{question.explanation}</p>
-            </div>
-          )}
-
-          {!selfEval && (
-            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <span className="text-sm text-amber-800">请对照答案进行自评：</span>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-green-300 text-green-700 hover:bg-green-50"
-                onClick={() => handleSelfEval('correct')}
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                掌握
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-red-300 text-red-700 hover:bg-red-50"
-                onClick={() => handleSelfEval('wrong')}
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                未掌握
-              </Button>
-            </div>
-          )}
-
-          {selfEval && (
-            <div className={`p-3 rounded-lg border ${selfEval === 'correct' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-              <span className={`text-sm font-medium ${selfEval === 'correct' ? 'text-green-700' : 'text-red-700'}`}>
-                {selfEval === 'correct' ? '已标记为掌握' : '已加入错题本，继续加油!'}
-              </span>
             </div>
           )}
         </div>
@@ -367,7 +361,7 @@ function TextQuestion({ question }: { question: Question }) {
 
 /* ======================== Question Card ======================== */
 function QuestionCard() {
-  const { getCurrentQuestion, filteredQuestions, currentIndex, answers, examMode, endExam } = useQuiz();
+  const { getCurrentQuestion, filteredQuestions, currentIndex, answers, draftAnswers, submitted, submitAll, examMode, endExam } = useQuiz();
   const question = getCurrentQuestion();
 
   if (!question) {
@@ -382,13 +376,23 @@ function QuestionCard() {
     );
   }
 
+  const hasDraft = draftAnswers[question.id] !== undefined;
   const isAnswered = answers[question.id] !== undefined;
   const typeLabel = QUESTION_TYPE_LABELS[question.type];
   const subjectLabel = SUBJECT_LABELS[question.subject];
   const isLastQuestion = currentIndex >= filteredQuestions.length - 1;
 
-  // Check if all questions in current filter are answered
-  const allAnswered = filteredQuestions.every((q) => answers[q.id] !== undefined);
+  // Check if all questions in current filter have draft answers
+  const allDrafted = filteredQuestions.every((q) => draftAnswers[q.id] !== undefined);
+
+  const handleSubmitAll = () => {
+    if (typeof window !== 'undefined' && window.confirm('确定要提交试卷吗？提交后将显示成绩。')) {
+      submitAll();
+      if (examMode === 'exam') {
+        endExam();
+      }
+    }
+  };
 
   return (
     <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
@@ -401,9 +405,14 @@ function QuestionCard() {
             <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50/50 rounded-lg">
               {typeLabel}
             </Badge>
-            {isAnswered && (
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 rounded-lg" variant="outline">
+            {!submitted && hasDraft && (
+              <Badge className="bg-indigo-50 text-indigo-600 border-indigo-200 rounded-lg" variant="outline">
                 已答
+              </Badge>
+            )}
+            {submitted && isAnswered && (
+              <Badge className={answers[question.id]?.isCorrect ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'} variant="outline">
+                {answers[question.id]?.isCorrect ? '答对' : '答错'}
               </Badge>
             )}
           </div>
@@ -417,28 +426,24 @@ function QuestionCard() {
       </CardHeader>
       <CardContent className="pt-5">
         {question.type === 'choice' ? (
-          <ChoiceQuestion question={question} answered={isAnswered} />
+          <ChoiceQuestion question={question} answered={hasDraft} />
         ) : (
           <TextQuestion question={question} />
         )}
 
-        {/* All questions answered indicator in exam mode */}
-        {examMode === 'exam' && allAnswered && isLastQuestion && (
+        {/* Submit button - show when all questions are drafted and not yet submitted */}
+        {!submitted && allDrafted && isLastQuestion && (
           <div className="mt-4 p-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/60 to-green-50/40">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               <span className="font-medium text-emerald-700">所有题目已完成!</span>
             </div>
             <p className="text-sm text-emerald-600 mb-3">
-              你已完成当前筛选条件下的所有题目，可以提交试卷查看成绩。
+              你已完成当前筛选条件下的所有题目，可以提交查看成绩。
             </p>
             <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.confirm('确定要提交试卷吗？')) {
-                  endExam();
-                }
-              }}
+              className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white border-none shadow-sm shadow-emerald-200"
+              onClick={handleSubmitAll}
             >
               <Trophy className="h-4 w-4 mr-2" />
               提交试卷
@@ -446,8 +451,8 @@ function QuestionCard() {
           </div>
         )}
 
-        {/* Last question indicator in exam mode (not all answered yet) */}
-        {examMode === 'exam' && isLastQuestion && !allAnswered && (
+        {/* Last question indicator (not all drafted yet) */}
+        {!submitted && isLastQuestion && !allDrafted && (
           <div className="mt-4 p-3 rounded-lg border border-amber-200 bg-amber-50">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -462,12 +467,13 @@ function QuestionCard() {
 
 /* ======================== Question Navigator ======================== */
 function QuestionNavigator() {
-  const { filteredQuestions, currentIndex, goToQuestion, goToPrev, goToNext, answers } = useQuiz();
+  const { filteredQuestions, currentIndex, goToQuestion, goToPrev, goToNext, answers, draftAnswers, submitted } = useQuiz();
 
-  // Calculate stats for the legend
-  const answeredCorrect = filteredQuestions.filter((q) => answers[q.id]?.isCorrect === true).length;
-  const answeredWrong = filteredQuestions.filter((q) => answers[q.id]?.isCorrect === false).length;
-  const unanswered = filteredQuestions.length - answeredCorrect - answeredWrong;
+  // Calculate stats
+  const draftAnsweredCount = filteredQuestions.filter((q) => draftAnswers[q.id] !== undefined).length;
+  const answeredCorrect = submitted ? filteredQuestions.filter((q) => answers[q.id]?.isCorrect === true).length : 0;
+  const answeredWrong = submitted ? filteredQuestions.filter((q) => answers[q.id]?.isCorrect === false).length : 0;
+  const unanswered = filteredQuestions.length - draftAnsweredCount;
 
   return (
     <Card className="border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
@@ -480,18 +486,29 @@ function QuestionNavigator() {
             题目导航
           </CardTitle>
           <div className="flex items-center gap-3 text-xs text-gray-400">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-md bg-gray-100 border border-gray-200 inline-block" />
-              未答 {unanswered}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-md bg-emerald-100 border border-emerald-300 inline-block" />
-              答对 {answeredCorrect}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-md bg-rose-100 border border-rose-300 inline-block" />
-              答错 {answeredWrong}
-            </span>
+            {!submitted ? (
+              <>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-md bg-gray-100 border border-gray-200 inline-block" />
+                  未答 {unanswered}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-md bg-indigo-100 border border-indigo-300 inline-block" />
+                  已答 {draftAnsweredCount}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-md bg-emerald-100 border border-emerald-300 inline-block" />
+                  答对 {answeredCorrect}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-md bg-rose-100 border border-rose-300 inline-block" />
+                  答错 {answeredWrong}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -499,11 +516,12 @@ function QuestionNavigator() {
         <div className="flex flex-wrap gap-1.5 mb-4">
           {filteredQuestions.map((q, idx) => {
             const record = answers[q.id];
+            const hasDraft = draftAnswers[q.id] !== undefined;
             const isCurrent = idx === currentIndex;
             let bgClass = 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200/80';
             let icon = null;
 
-            if (record) {
+            if (submitted && record) {
               if (record.isCorrect) {
                 bgClass = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200';
                 icon = <CheckCircle2 className="h-3 w-3 text-emerald-500" />;
@@ -511,6 +529,8 @@ function QuestionNavigator() {
                 bgClass = 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200';
                 icon = <XCircle className="h-3 w-3 text-rose-400" />;
               }
+            } else if (!submitted && hasDraft) {
+              bgClass = 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200';
             }
 
             if (isCurrent) {
@@ -523,7 +543,7 @@ function QuestionNavigator() {
                 key={q.id}
                 onClick={() => goToQuestion(idx)}
                 className={`relative w-8 h-8 rounded-lg text-xs font-medium transition-all flex items-center justify-center ${bgClass}`}
-                title={`第${idx + 1}题${record ? (record.isCorrect ? ' - 答对' : ' - 答错') : ' - 未答'}`}
+                title={`第${idx + 1}题${submitted && record ? (record.isCorrect ? ' - 答对' : ' - 答错') : hasDraft ? ' - 已答' : ' - 未答'}`}
               >
                 {isCurrent ? idx + 1 : (icon || idx + 1)}
               </button>
@@ -1234,10 +1254,15 @@ function PausedOverlay() {
 
 /* ======================== App Shell ======================== */
 function AppShell() {
-  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance } = useQuiz();
+  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance, submitted, draftAnsweredCount, filteredQuestions, submitAll, endExam } = useQuiz();
   const [showModeDialog, setShowModeDialog] = useState(false);
 
-  // If exam is finished, show results
+  // If submitted (either exam finished or manual submit), show results
+  if (submitted) {
+    return <ExamResults />;
+  }
+
+  // If exam is finished (time's up), show results
   if (examMode === 'exam' && examFinished) {
     return <ExamResults />;
   }
