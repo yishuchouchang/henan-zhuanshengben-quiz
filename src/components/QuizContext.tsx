@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { allQuestions, type Question, type QuestionType, type Subject } from '@/data';
+import { getQuestionsByYear, type Question, type QuestionType, type Subject } from '@/data';
 
 interface AnswerRecord {
   questionId: number;
@@ -21,6 +21,8 @@ interface ExamState {
 }
 
 interface QuizState {
+  // Year selection
+  year: number;
   // Filters
   subjectFilter: Subject | 'all';
   typeFilter: QuestionType | 'all';
@@ -48,6 +50,7 @@ interface QuizState {
 
 interface QuizContextType extends QuizState {
   filteredQuestions: Question[];
+  setYear: (year: number) => void;
   setSubjectFilter: (s: Subject | 'all') => void;
   setTypeFilter: (t: QuestionType | 'all') => void;
   setView: (v: 'practice' | 'wrong_book' | 'progress') => void;
@@ -101,6 +104,7 @@ function saveState(state: QuizState) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      year: state.year,
       draftAnswers: state.draftAnswers,
       answers: state.answers,
       wrongIds: state.wrongIds,
@@ -120,6 +124,7 @@ function saveState(state: QuizState) {
 export function QuizProvider({ children }: { children: ReactNode }) {
   const saved = loadState();
 
+  const [year, setYearState] = useState<number>(saved.year || 2026);
   const [subjectFilter, setSubjectFilter] = useState<Subject | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<QuestionType | 'all'>('all');
   const [view, setView] = useState<'practice' | 'wrong_book' | 'progress'>('practice');
@@ -145,8 +150,24 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     setAutoAdvanceState(enabled);
   }, []);
 
+  // Get questions for current year
+  const questions = getQuestionsByYear(year);
+
+  // Set year and reset progress
+  const setYear = useCallback((newYear: number) => {
+    setYearState(newYear);
+    setDraftAnswers({});
+    setAnswers({});
+    setWrongIds([]);
+    setCurrentIndex(0);
+    setSubmitted(false);
+    setExamFinished(false);
+    setExamStartTime(null);
+    setExamRemainingSeconds(EXAM_DURATION_SECONDS);
+  }, []);
+
   // Filtered questions
-  const filteredQuestions = allQuestions.filter((q) => {
+  const filteredQuestions = questions.filter((q) => {
     if (subjectFilter !== 'all' && q.subject !== subjectFilter) return false;
     if (typeFilter !== 'all' && q.type !== typeFilter) return false;
     return true;
@@ -155,11 +176,11 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   // Save to localStorage when key state changes
   useEffect(() => {
     saveState({
-      subjectFilter, typeFilter, view, draftAnswers, answers, wrongIds, currentIndex, submitted,
+      year, subjectFilter, typeFilter, view, draftAnswers, answers, wrongIds, currentIndex, submitted,
       examMode, examStartTime, examRemainingSeconds, examFinished, examPaused,
       autoAdvance,
     } as QuizState);
-  }, [draftAnswers, answers, wrongIds, subjectFilter, typeFilter, view, currentIndex, submitted, examMode, examStartTime, examRemainingSeconds, examFinished, examPaused, autoAdvance]);
+  }, [year, draftAnswers, answers, wrongIds, subjectFilter, typeFilter, view, currentIndex, submitted, examMode, examStartTime, examRemainingSeconds, examFinished, examPaused, autoAdvance]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -203,7 +224,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
 
       Object.entries(draftAnswers).forEach(([qIdStr, userAnswer]) => {
         const questionId = Number(qIdStr);
-        const question = allQuestions.find((q) => q.id === questionId);
+        const question = questions.find((q) => q.id === questionId);
         if (!question) return;
 
         let isCorrect = false;
@@ -246,7 +267,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
 
     Object.entries(draftAnswers).forEach(([qIdStr, userAnswer]) => {
       const questionId = Number(qIdStr);
-      const question = allQuestions.find((q) => q.id === questionId);
+      const question = questions.find((q) => q.id === questionId);
       if (!question) return;
 
       let isCorrect = false;
@@ -386,10 +407,10 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const answeredCount = Object.keys(answers).length;
   const correctCount = Object.values(answers).filter((a) => a.isCorrect).length;
   const choiceAnsweredCount = Object.values(answers).filter(
-    (a) => allQuestions.find((q) => q.id === a.questionId)?.type === 'choice'
+    (a) => questions.find((q) => q.id === a.questionId)?.type === 'choice'
   ).length;
   const choiceCorrectCount = Object.values(answers).filter(
-    (a) => a.isCorrect && allQuestions.find((q) => q.id === a.questionId)?.type === 'choice'
+    (a) => a.isCorrect && questions.find((q) => q.id === a.questionId)?.type === 'choice'
   ).length;
 
   // Reset index when filters change
@@ -398,6 +419,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   }, [subjectFilter, typeFilter]);
 
   const value: QuizContextType = {
+    year,
     subjectFilter,
     typeFilter,
     view,
@@ -413,6 +435,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     examPaused,
     autoAdvance,
     filteredQuestions,
+    setYear,
     setSubjectFilter,
     setTypeFilter,
     setView,

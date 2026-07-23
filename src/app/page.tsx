@@ -1254,7 +1254,7 @@ function PausedOverlay() {
 
 /* ======================== App Shell ======================== */
 function AppShell() {
-  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance, submitted, draftAnsweredCount, filteredQuestions, submitAll, endExam } = useQuiz();
+  const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance, submitted, draftAnsweredCount, filteredQuestions, submitAll, endExam, year, setYear } = useQuiz();
   const [showModeDialog, setShowModeDialog] = useState(false);
 
   // If submitted (either exam finished or manual submit), show results
@@ -1279,10 +1279,26 @@ function AppShell() {
               </div>
               <div>
                 <h1 className="text-base font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight">教育理论刷题</h1>
-                <p className="text-xs text-gray-400">2026河南专升本</p>
+                <p className="text-xs text-gray-400">河南专升本真题</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Year switcher */}
+              <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+                {[2025, 2026].map((y) => (
+                  <button
+                    key={y}
+                    onClick={() => setYear(y)}
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                      year === y
+                        ? 'bg-white text-indigo-600 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
               {/* Auto-advance toggle */}
               <button
                 onClick={() => setAutoAdvance(!autoAdvance)}
