@@ -1,8 +1,8 @@
 import { Question } from './types';
 import { educationQuestions } from './education-questions';
 import { psychologyQuestions } from './psychology-questions';
-import { education2025Questions } from './education-2025';
-import { psychology2025Questions } from './psychology-2025';
+import { educationQuestions2025 } from './education-2025';
+import { psychologyQuestions2025 } from './psychology-2025';
 
 // 2026年真题
 export const allQuestions2026: Question[] = [
@@ -12,14 +12,14 @@ export const allQuestions2026: Question[] = [
 
 // 2025年真题
 export const allQuestions2025: Question[] = [
-  ...education2025Questions,
-  ...psychology2025Questions,
+  ...educationQuestions2025,
+  ...psychologyQuestions2025,
 ];
 
 // 默认使用2026年真题
 export const allQuestions: Question[] = allQuestions2026;
 
-export { educationQuestions, psychologyQuestions, education2025Questions, psychology2025Questions };
+export { educationQuestions, psychologyQuestions, educationQuestions2025, psychologyQuestions2025 };
 export type { Question, QuestionType, Subject } from './types';
 export { QUESTION_TYPE_LABELS, SUBJECT_LABELS } from './types';
 
