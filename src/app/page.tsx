@@ -1285,7 +1285,7 @@ function AppShell() {
             <div className="flex items-center gap-2">
               {/* Year switcher */}
               <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
-                {[2023, 2024, 2025, 2026].map((y) => (
+                {[2022, 2023, 2024, 2025, 2026].map((y) => (
                   <button
                     key={y}
                     onClick={() => setYear(y)}
