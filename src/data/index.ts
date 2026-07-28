@@ -9,6 +9,8 @@ import { educationQuestions2024 } from './education-2024';
 import { psychologyQuestions2024 } from './psychology-2024';
 import { educationQuestions2022 } from './education-2022';
 import { psychologyQuestions2022 } from './psychology-2022';
+import { educationQuestions2020 } from './education-2020';
+import { psychologyQuestions2020 } from './psychology-2020';
 
 // 2026年真题
 export const allQuestions2026: Question[] = [
@@ -40,10 +42,16 @@ export const allQuestions2022: Question[] = [
   ...psychologyQuestions2022,
 ];
 
+// 2020年真题
+export const allQuestions2020: Question[] = [
+  ...educationQuestions2020,
+  ...psychologyQuestions2020,
+];
+
 // 默认使用2026年真题
 export const allQuestions: Question[] = allQuestions2026;
 
-export { educationQuestions, psychologyQuestions, educationQuestions2025, psychologyQuestions2025, educationQuestions2023, psychologyQuestions2023, educationQuestions2024, psychologyQuestions2024, educationQuestions2022, psychologyQuestions2022 };
+export { educationQuestions, psychologyQuestions, educationQuestions2025, psychologyQuestions2025, educationQuestions2023, psychologyQuestions2023, educationQuestions2024, psychologyQuestions2024, educationQuestions2022, psychologyQuestions2022, educationQuestions2020, psychologyQuestions2020 };
 export type { Question, QuestionType, Subject } from './types';
 export { QUESTION_TYPE_LABELS, SUBJECT_LABELS } from './types';
 
