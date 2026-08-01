@@ -13,6 +13,8 @@ import { educationQuestions2020 } from './education-2020';
 import { psychologyQuestions2020 } from './psychology-2020';
 import { educationQuestions2021 } from './education-2021';
 import { psychologyQuestions2021 } from './psychology-2021';
+import { educationQuestions2019 } from './education-2019';
+import { psychologyQuestions2019 } from './psychology-2019';
 
 // 2026年真题
 export const allQuestions2026: Question[] = [
@@ -56,10 +58,16 @@ export const allQuestions2021: Question[] = [
   ...psychologyQuestions2021,
 ];
 
+// 2019年真题
+export const allQuestions2019: Question[] = [
+  ...educationQuestions2019,
+  ...psychologyQuestions2019,
+];
+
 // 默认使用2026年真题
 export const allQuestions: Question[] = allQuestions2026;
 
-export { educationQuestions, psychologyQuestions, educationQuestions2025, psychologyQuestions2025, educationQuestions2023, psychologyQuestions2023, educationQuestions2024, psychologyQuestions2024, educationQuestions2022, psychologyQuestions2022, educationQuestions2020, psychologyQuestions2020, educationQuestions2021, psychologyQuestions2021 };
+export { educationQuestions, psychologyQuestions, educationQuestions2025, psychologyQuestions2025, educationQuestions2023, psychologyQuestions2023, educationQuestions2024, psychologyQuestions2024, educationQuestions2022, psychologyQuestions2022, educationQuestions2020, psychologyQuestions2020, educationQuestions2021, psychologyQuestions2021, educationQuestions2019, psychologyQuestions2019 };
 export type { Question, QuestionType, Subject } from './types';
 export { QUESTION_TYPE_LABELS, SUBJECT_LABELS } from './types';
 
@@ -71,5 +79,6 @@ export const getQuestionsByYear = (year: number): Question[] => {
   if (year === 2022) return allQuestions2022;
   if (year === 2021) return allQuestions2021;
   if (year === 2020) return allQuestions2020;
+  if (year === 2019) return allQuestions2019;
   return allQuestions2026;
 };
