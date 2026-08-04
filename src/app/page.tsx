@@ -39,6 +39,7 @@ import {
   Timer,
   Trophy,
   Target,
+  Pencil,
 } from 'lucide-react';
 
 /* ======================== Filter Bar ======================== */
@@ -1217,6 +1218,23 @@ function MainContent() {
     case 'practice':
       return (
         <div className="space-y-5">
+          {/* Fill Practice Entry Card */}
+          <a href="/fill" className="block">
+            <Card className="border-emerald-200/60 shadow-lg shadow-emerald-100/20 overflow-hidden rounded-2xl hover:shadow-emerald-200/30 transition-all cursor-pointer group">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-md shadow-emerald-200 group-hover:scale-105 transition-transform">
+                    <Pencil className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-gray-800">填空专项练习</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">2014-2026年真题填空 · 共520题</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </CardContent>
+            </Card>
+          </a>
           <FilterBar />
           <QuestionCard />
           <QuestionNavigator />
@@ -1327,6 +1345,16 @@ function AppShell() {
                 <Timer className="h-3 w-3 mr-1" />
                 {examMode === 'exam' ? '考试中' : '切换模式'}
               </Button>
+              <a href="/fill">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  填空专项
+                </Button>
+              </a>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span className="hidden sm:inline">
                   <ListChecks className="h-3 w-3 inline mr-1" />
