@@ -1,0 +1,34 @@
+需要将Next.js项目改为静态导出模式，以便部署到Cloudflare Pages（免费静态托管，国内可访问）。
+
+## 修改步骤
+
+### 1. 修改 next.config.ts
+在nextConfig对象中添加以下配置：
+
+output: 'export',
+images: {
+  unoptimized: true,
+},
+
+注意：
+- output: 'export' 让Next.js在build时生成纯静态HTML到out目录
+- images.unoptimized: true 是必须的，因为静态导出不支持Next.js图片优化服务器
+- 保留已有的 typescript.ignoreBuildErrors 和 eslint.ignoreDuringBuilds 配置
+- 保留已有的 allowedDevOrigins 配置
+- 把原来 images 里的 remotePatterns 配置替换为 unoptimized: true（静态导出不需要remotePatterns）
+- 添加 trailingSlash: true（让URL末尾带斜杠，避免静态托管路由问题）
+
+### 2. 确认package.json的build脚本
+确保build脚本为 "next build"（已经是了，确认即可）
+
+### 3. 检查是否有动态路由或API路由
+如果 src/app/ 下有 api/ 目录，静态导出不支持API路由，但不影响前端功能。
+如果有 [id] 之类的动态路由，需要确保它们可以用 generateStaticParams 静态生成。
+
+### 4. 验证构建
+运行 pnpm build，确认 out/ 目录生成成功，没有报错。
+
+### 5. 推送到GitHub
+完成修改后推送代码。
+
+重要：这个修改不会影响Coze平台的部署和运行，Coze仍然用原来的方式构建。只是GitHub上的代码同时支持静态导出。
