@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Filter,
   BarChart3,
   CheckCircle2,
@@ -42,6 +44,7 @@ export default function FillPracticePage() {
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [showAnswer, setShowAnswer] = useState<Record<string, boolean>>({});
   const [showNavigator, setShowNavigator] = useState(false);
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
   // Filter questions by year and subject
   const questions = useMemo(() => {
@@ -173,21 +176,32 @@ export default function FillPracticePage() {
             </div>
           </div>
 
-          {/* Year selector */}
-          <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-            {FILL_YEARS.map((y) => (
-              <button
-                key={y}
-                onClick={() => setYear(y)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  year === y
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-              >
-                {y}年
-              </button>
-            ))}
+          {/* Year selector - collapsible */}
+          <div className="relative mb-3">
+            <button
+              onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-medium hover:bg-emerald-100 transition-all"
+            >
+              <span>{year}年</span>
+              {yearDropdownOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
+            {yearDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-xl shadow-lg shadow-emerald-100/50 border border-emerald-100 p-1.5 min-w-[80px] max-h-[240px] overflow-y-auto">
+                {FILL_YEARS.map((y) => (
+                  <button
+                    key={y}
+                    onClick={() => { setYear(y); setYearDropdownOpen(false); }}
+                    className={`w-full px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-left ${
+                      year === y
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm'
+                        : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-600'
+                    }`}
+                  >
+                    {y}年
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Subject filter */}

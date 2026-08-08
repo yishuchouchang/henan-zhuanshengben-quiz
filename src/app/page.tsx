@@ -40,6 +40,8 @@ import {
   Trophy,
   Target,
   Pencil,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 /* ======================== Filter Bar ======================== */
@@ -1274,6 +1276,7 @@ function PausedOverlay() {
 function AppShell() {
   const { view, setView, answeredCount, wrongIds, examMode, examFinished, examPaused, autoAdvance, setAutoAdvance, submitted, draftAnsweredCount, filteredQuestions, submitAll, endExam, year, setYear } = useQuiz();
   const [showModeDialog, setShowModeDialog] = useState(false);
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
   // If submitted (either exam finished or manual submit), show results
   if (submitted) {
@@ -1301,21 +1304,32 @@ function AppShell() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {/* Year switcher */}
-              <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
-                {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map((y) => (
-                  <button
-                    key={y}
-                    onClick={() => setYear(y)}
-                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${
-                      year === y
-                        ? 'bg-white text-indigo-600 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {y}
-                  </button>
-                ))}
+              {/* Year switcher - collapsible */}
+              <div className="relative">
+                <button
+                  onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-medium hover:bg-indigo-100 transition-all"
+                >
+                  <span>{year}年</span>
+                  {yearDropdownOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+                {yearDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg shadow-indigo-100/50 border border-indigo-100 p-1.5 min-w-[80px]">
+                    {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => { setYear(y); setYearDropdownOpen(false); }}
+                        className={`w-full px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-left ${
+                          year === y
+                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-sm'
+                            : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
+                      >
+                        {y}年
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               {/* Auto-advance toggle */}
               <button
