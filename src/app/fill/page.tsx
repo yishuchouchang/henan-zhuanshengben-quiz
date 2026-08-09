@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 
 type SubjectFilter = 'all' | 'education' | 'psychology';
+type FeedbackMode = 'instant' | 'unified';
 
 const SUBJECT_LABELS: Record<string, string> = {
   education: '教育学',
@@ -45,6 +46,7 @@ export default function FillPracticePage() {
   const [showAnswer, setShowAnswer] = useState<Record<string, boolean>>({});
   const [showNavigator, setShowNavigator] = useState(false);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>('instant');
 
   // Filter questions by year and subject
   const questions = useMemo(() => {
@@ -88,6 +90,42 @@ export default function FillPracticePage() {
     if (!currentQuestion) return;
     setSubmittedIds((prev) => new Set([...prev, currentQuestion.id]));
     setShowAnswer((prev) => ({ ...prev, [currentQuestion.id]: true }));
+  };
+
+  // Instant feedback: submit and auto-advance
+  const handleInstantSubmit = () => {
+    if (!currentQuestion) return;
+    const userAns = (userAnswers[currentQuestion.id] || '').trim();
+    if (!userAns) return; // Don't submit empty answer
+    setSubmittedIds((prev) => new Set([...prev, currentQuestion.id]));
+    setShowAnswer((prev) => ({ ...prev, [currentQuestion.id]: true }));
+    // Auto-advance after a short delay so user can see the result
+    setTimeout(() => {
+      if (currentIndex < questions.length - 1) {
+        setCurrentIndex((i) => i + 1);
+      }
+    }, 1500);
+  };
+
+  // Unified mode: submit all unanswered questions
+  const handleSubmitAll = () => {
+    const newSubmitted = new Set(submittedIds);
+    const newShowAnswer = { ...showAnswer };
+    questions.forEach((q) => {
+      if (!newSubmitted.has(q.id)) {
+        newSubmitted.add(q.id);
+        newShowAnswer[q.id] = true;
+      }
+    });
+    setSubmittedIds(newSubmitted);
+    setShowAnswer(newShowAnswer);
+  };
+
+  // Handle Enter key for instant mode
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && feedbackMode === 'instant') {
+      handleInstantSubmit();
+    }
   };
 
   const handleNext = () => {
@@ -174,6 +212,37 @@ export default function FillPracticePage() {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Feedback mode toggle */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setFeedbackMode('instant')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  feedbackMode === 'instant'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                <Lightbulb className="h-3 w-3" />
+                即时反馈
+              </button>
+              <button
+                onClick={() => setFeedbackMode('unified')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  feedbackMode === 'unified'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                <ListChecks className="h-3 w-3" />
+                统一提交
+              </button>
+            </div>
+            <span className="text-xs text-gray-400">
+              {feedbackMode === 'instant' ? '答完即判，自动跳题' : '全部答完后统一判分'}
+            </span>
           </div>
 
           {/* Year selector - collapsible */}
@@ -346,7 +415,11 @@ export default function FillPracticePage() {
                 disabled={submittedIds.has(currentQuestion.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !submittedIds.has(currentQuestion.id)) {
-                    handleSubmit();
+                    if (feedbackMode === 'instant') {
+                      handleInstantSubmit();
+                    } else {
+                      handleSubmit();
+                    }
                   }
                 }}
               />
@@ -354,12 +427,12 @@ export default function FillPracticePage() {
               {/* Submit button */}
               {!submittedIds.has(currentQuestion.id) && (
                 <Button
-                  onClick={handleSubmit}
+                  onClick={feedbackMode === 'instant' ? handleInstantSubmit : handleSubmit}
                   disabled={!userAnswers[currentQuestion.id]?.trim()}
                   className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-sm shadow-emerald-200"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  提交答案
+                  {feedbackMode === 'instant' ? '提交并判分' : '提交答案'}
                 </Button>
               )}
 
@@ -449,6 +522,39 @@ export default function FillPracticePage() {
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
+
+        {/* Submit All button for unified mode */}
+        {feedbackMode === 'unified' && stats.answered < stats.total && (
+          <Button
+            onClick={handleSubmitAll}
+            className="w-full mt-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-sm shadow-emerald-200 py-5 text-base font-medium"
+          >
+            <ListChecks className="h-5 w-5 mr-2" />
+            统一提交全部答案（还有 {stats.total - stats.answered} 题未答）
+          </Button>
+        )}
+
+        {/* Results summary for unified mode after submit all */}
+        {feedbackMode === 'unified' && stats.answered === stats.total && stats.total > 0 && (
+          <Card className="mt-4 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
+            <CardContent className="pt-5">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
+                  {stats.correct >= stats.total * 0.8 ? (
+                    <CheckCircle2 className="h-6 w-6 text-white" />
+                  ) : (
+                    <Lightbulb className="h-6 w-6 text-white" />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-1">练习完成！</h3>
+                <p className="text-sm text-gray-600">
+                  共 {stats.total} 题，答对 <span className="text-emerald-600 font-bold">{stats.correct}</span> 题，
+                  正确率 <span className="text-emerald-600 font-bold">{Math.round((stats.correct / stats.total) * 100)}%</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Card */}
         <Card className="mt-6 border-indigo-100/60 shadow-lg shadow-indigo-100/20 overflow-hidden rounded-2xl">
