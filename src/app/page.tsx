@@ -1237,8 +1237,25 @@ function MainContent() {
               </CardContent>
             </Card>
           </a>
-          {/* Subjective Practice Entry Card */}
+          {/* Psychology Subjective Practice Entry Card */}
           <a href="/subjective" className="block">
+            <Card className="border-violet-200/60 shadow-lg shadow-violet-100/20 overflow-hidden rounded-2xl hover:shadow-violet-200/30 transition-all cursor-pointer group">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center shadow-md shadow-violet-200 group-hover:scale-105 transition-transform">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-gray-800">心理学简答</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">简答/论述/案例分析 · 共120题</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-violet-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </CardContent>
+            </Card>
+          </a>
+          {/* Education Subjective Practice Entry Card */}
+          <a href="/education" className="block">
             <Card className="border-amber-200/60 shadow-lg shadow-amber-100/20 overflow-hidden rounded-2xl hover:shadow-amber-200/30 transition-all cursor-pointer group">
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-center gap-3">
@@ -1246,8 +1263,8 @@ function MainContent() {
                     <BookOpen className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-gray-800">主观题训练</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">简答/论述/案例分析 · 共120题</p>
+                    <h3 className="text-sm font-bold text-gray-800">教育学简答</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">简答/论述 · 共66题</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -1390,10 +1407,20 @@ function AppShell() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-7 text-xs border-violet-200 text-violet-600 hover:bg-violet-50"
+                >
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  心理学简答
+                </Button>
+              </a>
+              <a href="/education">
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="h-7 text-xs border-amber-200 text-amber-600 hover:bg-amber-50"
                 >
                   <BookOpen className="h-3 w-3 mr-1" />
-                  主观题
+                  教育学简答
                 </Button>
               </a>
               <div className="flex items-center gap-3 text-xs text-gray-500">

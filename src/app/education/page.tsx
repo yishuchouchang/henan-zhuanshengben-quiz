@@ -3,10 +3,10 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, ChevronUp, BookOpen, Eye, EyeOff, CheckCircle2, List } from "lucide-react";
-import { subjectiveQuestions, chapters } from "@/data/subjective-questions";
+import { educationSubjectiveQuestions, educationChapters } from "@/data/education-subjective-questions";
 import { cn } from "@/lib/utils";
 
-export default function SubjectivePage() {
+export default function EducationSubjectivePage() {
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
   const [chapterExpanded, setChapterExpanded] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -15,7 +15,7 @@ export default function SubjectivePage() {
   const [navExpanded, setNavExpanded] = useState(false);
 
   const filteredQuestions = useMemo(() => {
-    return subjectiveQuestions.filter((q) => q.chapterId === selectedChapter);
+    return educationSubjectiveQuestions.filter((q) => q.chapterId === selectedChapter);
   }, [selectedChapter]);
 
   const currentQuestion = filteredQuestions[currentIdx];
@@ -58,13 +58,13 @@ export default function SubjectivePage() {
   };
 
   const chapterProgress = useMemo(() => {
-    const chapterQs = subjectiveQuestions.filter((q) => q.chapterId === selectedChapter);
+    const chapterQs = educationSubjectiveQuestions.filter((q) => q.chapterId === selectedChapter);
     const answered = chapterQs.filter((q) => answeredIds.has(q.id)).length;
     return { total: chapterQs.length, answered };
   }, [selectedChapter, answeredIds]);
 
   const totalProgress = useMemo(() => {
-    return { total: subjectiveQuestions.length, answered: answeredIds.size };
+    return { total: educationSubjectiveQuestions.length, answered: answeredIds.size };
   }, [answeredIds]);
 
   if (!currentQuestion) {
@@ -75,22 +75,22 @@ export default function SubjectivePage() {
     );
   }
 
-  const selectedChapterInfo = chapters.find((c) => c.id === selectedChapter);
+  const selectedChapterInfo = educationChapters.find((c) => c.id === selectedChapter);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-violet-100 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-amber-100 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-violet-600 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-amber-600 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               返回首页
             </Link>
-            <h1 className="text-base font-semibold text-gray-800">心理学简答</h1>
+            <h1 className="text-base font-semibold text-gray-800">教育学简答</h1>
             <div className="text-xs text-gray-400">
               {totalProgress.answered}/{totalProgress.total}
             </div>
@@ -100,7 +100,7 @@ export default function SubjectivePage() {
           <div className="relative">
             <button
               onClick={() => setChapterExpanded(!chapterExpanded)}
-              className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all"
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all"
             >
               <span className="font-medium text-sm">
                 {selectedChapterInfo?.title}
@@ -118,14 +118,14 @@ export default function SubjectivePage() {
             </button>
 
             {chapterExpanded && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-violet-100 overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
-                {chapters.map((ch) => (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-amber-100 overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
+                {educationChapters.map((ch) => (
                   <button
                     key={ch.id}
                     onClick={() => handleChapterSelect(ch.id)}
                     className={cn(
-                      "w-full px-4 py-3 text-left flex items-center justify-between hover:bg-violet-50 transition-colors border-b border-gray-50 last:border-0",
-                      ch.id === selectedChapter && "bg-violet-50"
+                      "w-full px-4 py-3 text-left flex items-center justify-between hover:bg-amber-50 transition-colors border-b border-gray-50 last:border-0",
+                      ch.id === selectedChapter && "bg-amber-50"
                     )}
                   >
                     <span className="text-sm text-gray-700">{ch.title}</span>
@@ -141,11 +141,11 @@ export default function SubjectivePage() {
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-6 pb-32">
         {/* Question Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-violet-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
           {/* Question Header */}
-          <div className="px-5 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100">
+          <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-violet-600 font-medium">
+              <span className="text-xs text-amber-600 font-medium">
                 第 {currentIdx + 1} / {filteredQuestions.length} 题
               </span>
               <span className="text-xs text-gray-400">
@@ -162,7 +162,7 @@ export default function SubjectivePage() {
           {/* Question Content */}
           <div className="p-5">
             <div className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 text-white text-sm font-medium flex items-center justify-center">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white text-sm font-medium flex items-center justify-center">
                 {currentIdx + 1}
               </span>
               <p className="flex-1 text-gray-800 text-base leading-relaxed">
@@ -195,7 +195,7 @@ export default function SubjectivePage() {
             ) : (
               <button
                 onClick={handleShowAnswer}
-                className="w-full py-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <Eye className="w-4 h-4" />
                 显示答案
@@ -232,7 +232,7 @@ export default function SubjectivePage() {
               "px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
               currentIdx === filteredQuestions.length - 1
                 ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                : "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-sm hover:shadow-md"
+                : "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:shadow-md"
             )}
           >
             下一题
@@ -241,7 +241,7 @@ export default function SubjectivePage() {
 
         {/* Question Navigator Panel */}
         {navExpanded && (
-          <div className="mt-4 bg-white rounded-2xl shadow-sm border border-violet-100 p-4">
+          <div className="mt-4 bg-white rounded-2xl shadow-sm border border-amber-100 p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-gray-700">题号导航</span>
               <span className="text-xs text-gray-400">
@@ -256,7 +256,7 @@ export default function SubjectivePage() {
                   className={cn(
                     "w-full aspect-square rounded-lg text-xs font-medium transition-all",
                     idx === currentIdx
-                      ? "bg-gradient-to-br from-violet-500 to-purple-500 text-white shadow-sm"
+                      ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm"
                       : answeredIds.has(q.id)
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-gray-100 text-gray-500 hover:bg-gray-200"
