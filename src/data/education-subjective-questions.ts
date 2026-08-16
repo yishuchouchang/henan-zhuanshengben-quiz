@@ -22,6 +22,7 @@ export const educationChapters: EducationChapter[] = [
   { id: 7, title: "第7章 教学", questionCount: 33 },
   { id: 8, title: "第8章 德育", questionCount: 18 },
   { id: 9, title: "第9章 班级管理与班主任", questionCount: 7 },
+  { id: 10, title: "第10章 教育科学研究", questionCount: 1 },
 ];
 
 export const educationSubjectiveQuestions: EducationSubjectiveQuestion[] = [
@@ -983,5 +984,12 @@ export const educationSubjectiveQuestions: EducationSubjectiveQuestion[] = [
     chapterTitle: "第9章 班级管理与班主任",
     question: "试述班主任的任务与职责。",
     answer: "①深入了解学生。班主任既要熟悉班级发展的整体情况，也要对每一个学生的发展给予足够的关注。\n②做好学生思想政治工作。班主任是学生思想政治工作的重要责任人。\n③做好班级的管理工作。包括制订科学、民主的班级管理制度，组建学生认可的班级管理团队，塑造积极向上的班级文化等。\n④做好学生发展的引导工作。班主任要善于观察学生的日常生活，了解他们的内心世界。\n⑤组织好班集体活动。班集体活动是学生的第二课堂。\n⑥做好学生的综合素质评价。组织做好学生的综合素质评价工作。\n⑦有效应对学生教育工作的新问题。及时了解学生发展过程中出现的新问题。\n⑧做好校内校外的沟通工作。班主任是沟通校内校外各种教育力量的桥梁。",
+  },
+  {
+    id: "edu-sub-10-1",
+    chapterId: 10,
+    chapterTitle: "第10章 教育科学研究",
+    question: "简述教师开展教育科研的意义。",
+    answer: "（1）回应社会发展和教育改革对教师提出的新要求；\n（2）促进教师的专业成长与发展；\n（3）提升教师的自我价值和工作满意度；\n（4）促进学生和学校的发展；\n（5）促进教育科学的发展。"
   }
 ];
